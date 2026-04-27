@@ -137,18 +137,31 @@ document.getElementById('btn-logout').addEventListener('click', () => {
 // Firebase Auth Observer - The magic that checks if someone is logged in
 onAuthStateChanged(auth, async (user) => {
     if (user) {
+        console.log("✅ User authenticated successfully:", user.email);
         ui.currentUser = user;
         
-        // Check database to see if they already created a plan
-        const docSnap = await getDoc(doc(db, "users", user.uid));
-        
-        if (docSnap.exists() && docSnap.data().plan) {
-            ui.loadDashboard(docSnap.data().plan); // Skip quiz, go to dashboard
-        } else {
+        try {
+            console.log("🔍 Checking database for existing plan...");
+            // Check database to see if they already created a plan
+            const docSnap = await getDoc(doc(db, "users", user.uid));
+            
+            if (docSnap.exists() && docSnap.data().plan) {
+                console.log("📂 Existing plan found. Loading dashboard.");
+                ui.loadDashboard(docSnap.data().plan); // Skip quiz, go to dashboard
+            } else {
+                console.log("🆕 New user or no plan found. Loading quiz.");
+                ui.renderGrid();
+                ui.switchScreen('screen-quiz'); // New user, show quiz
+            }
+        } catch (error) {
+            // If the database fails (e.g., security rules), log the error but STILL let the user in!
+            console.error("❌ Database Error:", error.message);
             ui.renderGrid();
-            ui.switchScreen('screen-quiz'); // New user, show quiz
+            ui.switchScreen('screen-quiz'); 
         }
+        
     } else {
+        console.log("🔒 No user logged in. Showing login screen.");
         ui.switchScreen('screen-login'); // Logged out
     }
 });
