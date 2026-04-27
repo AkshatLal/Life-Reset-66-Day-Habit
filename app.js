@@ -161,7 +161,16 @@ const ui = {
 document.getElementById('btn-start-timer').addEventListener('click', () => ui.startTimer());
 
 document.getElementById('btn-login').addEventListener('click', () => {
-    signInWithRedirect(auth, provider).catch(error => console.error("Login failed", error));
+    signInWithPopup(auth, provider)
+        .then((result) => {
+            console.log("🎉 Popup Login Successful:", result.user.email);
+            // We don't need to do anything else here because onAuthStateChanged 
+            // will automatically trigger and move us to the next screen!
+        })
+        .catch(error => {
+            console.error("❌ Popup Login failed", error.message);
+            alert("Login failed. Check the console for details.");
+        });
 });
 
 document.getElementById('btn-generate').addEventListener('click', () => {
