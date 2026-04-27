@@ -2,70 +2,73 @@ import { auth, db, provider, signInWithPopup, onAuthStateChanged, signOut, doc, 
 
 const ui = {
     currentUser: null,
-    parameters: [
-        { id: 'mental', label: 'Mental Health', task: 'Complete 10 min Guided Meditation' },
-        { id: 'screen', label: 'Screen Time', task: 'Activate Screen Blocker for 2 hours' },
-        { id: 'time', label: 'Procrastination', task: 'Complete one 25-min Focus Timer' },
-        { id: 'physical', label: 'Physical Health', task: 'Log workout or 10,000 steps' },
-        { id: 'sleep', label: 'Sleep Quality', task: 'Wind-down routine by 10:00 PM' },
-        { id: 'water', label: 'Hydration', task: 'Drink 2 Liters of Water' }
-    ],
-    selectedParams: new Set(),
+    userData: { xp: 0, level: 1, streak: 0, plan: [] },
+    
+    // ... (Keep your parameters array here) ...
 
     switchScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(screenId).classList.add('active');
     },
 
-    renderGrid() {
-        const grid = document.getElementById('param-grid');
-        grid.innerHTML = '';
-        this.parameters.forEach(param => {
-            const div = document.createElement('div');
-            div.className = 'param-card';
-            div.textContent = param.label;
-            div.onclick = () => {
-                div.classList.toggle('selected');
-                this.selectedParams.has(param.id) ? this.selectedParams.delete(param.id) : this.selectedParams.add(param.id);
-            };
-            grid.appendChild(div);
-        });
+    switchView(viewId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        // Update active class on sidebar
+        document.querySelectorAll('.nav-links li').forEach(li => li.classList.remove('active'));
+        event.target.classList.add('active');
     },
 
-    async savePlanAndLoadDashboard() {
-        if (this.selectedParams.size === 0) return alert("Select at least one area!");
+    async loadDashboard(userData) {
+        this.userData = { ...this.userData, ...userData }; // Merge database data
+        document.getElementById('user-greeting').textContent = `Welcome back, ${this.currentUser.displayName}`;
         
-        this.switchScreen('screen-loading');
+        this.updateRPGStats();
         
-        const userPlan = Array.from(this.selectedParams);
-        
-        // Save to Firebase Firestore Database
-        await setDoc(doc(db, "users", this.currentUser.uid), {
-            plan: userPlan,
-            day: 1,
-            email: this.currentUser.email
-        }, { merge: true });
-
-        setTimeout(() => this.loadDashboard(userPlan), 1500); // Artificial delay for effect
-    },
-
-    loadDashboard(userPlan) {
-        document.getElementById('user-greeting').textContent = `Welcome, ${this.currentUser.displayName}`;
         const list = document.getElementById('quest-list');
         list.innerHTML = ''; 
 
-        // Always add foundational habit
-        this.addQuestToList(list, "Make your bed");
-
-        // Add targeted quests based on saved DB array
+        // Load Quests
+        this.addQuestToList(list, "Make your bed", 10);
         this.parameters.forEach(param => {
-            if (userPlan.includes(param.id)) this.addQuestToList(list, param.task);
+            if (this.userData.plan.includes(param.id)) this.addQuestToList(list, param.task, 15);
         });
 
         this.switchScreen('screen-dashboard');
     },
 
-    addQuestToList(listElement, taskName) {
+    // --- THE RPG ENGINE ---
+    async gainXP(amount) {
+        this.userData.xp += amount;
+        
+        // Level up calculation (Every 100 XP = 1 Level)
+        const xpRequired = this.userData.level * 100;
+        if (this.userData.xp >= xpRequired) {
+            this.userData.level++;
+            this.userData.xp -= xpRequired;
+            alert(`🎉 LEVEL UP! You are now Level ${this.userData.level}!`);
+        }
+
+        this.updateRPGStats();
+
+        // Save new stats to Firebase
+        await setDoc(doc(db, "users", this.currentUser.uid), {
+            xp: this.userData.xp,
+            level: this.userData.level
+        }, { merge: true });
+    },
+
+    updateRPGStats() {
+        const xpRequired = this.userData.level * 100;
+        const xpPercentage = (this.userData.xp / xpRequired) * 100;
+        
+        document.getElementById('ui-level').textContent = `Lvl ${this.userData.level} Player`;
+        document.getElementById('ui-xp-text').textContent = this.userData.xp;
+        document.getElementById('ui-xp-bar').style.width = `${xpPercentage}%`;
+        document.getElementById('ui-streak').textContent = this.userData.streak;
+    },
+
+    addQuestToList(listElement, taskName, xpReward) {
         const div = document.createElement('div');
         div.className = 'quest-item';
         
@@ -74,16 +77,48 @@ const ui = {
         
         const btn = document.createElement('button');
         btn.className = 'quest-btn';
-        btn.textContent = '+ 10 XP';
+        btn.textContent = `+ ${xpReward} XP`;
+        
         btn.onclick = () => {
             btn.classList.add('completed');
             btn.textContent = 'Completed';
             btn.disabled = true;
+            this.gainXP(xpReward); // Trigger the RPG Engine!
         };
 
         div.appendChild(span); div.appendChild(btn); listElement.appendChild(div);
+    },
+
+    // --- MINI TOOL: FOCUS TIMER ---
+    timerInterval: null,
+    startTimer() {
+        let timeLeft = 25 * 60; // 25 minutes
+        const display = document.getElementById('timer-display');
+        const btn = document.getElementById('btn-start-timer');
+        
+        btn.disabled = true;
+        btn.textContent = "Focusing...";
+
+        this.timerInterval = setInterval(() => {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            display.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+            if (timeLeft <= 0) {
+                clearInterval(this.timerInterval);
+                display.textContent = "25:00";
+                btn.disabled = false;
+                btn.textContent = "Start Focus";
+                this.gainXP(50); // Reward for deep work
+                alert("Session Complete! +50 XP");
+            }
+        }, 1000);
     }
 };
+
+// Add listener for the timer
+document.getElementById('btn-start-timer').addEventListener('click', () => ui.startTimer());
 
 // --- EVENT LISTENERS & AUTH STATE ---
 
