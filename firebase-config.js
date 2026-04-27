@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged, signOut, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // TODO: Replace this object with your actual Firebase project configuration
@@ -21,4 +21,4 @@ const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
 // Export everything so app.js can use it
-export { auth, db, provider, signInWithRedirect, onAuthStateChanged, signOut, doc, setDoc, getDoc, getRedirectResult };
+export { auth, db, provider, signInWithPopup, onAuthStateChanged, signOut, doc, setDoc, getDoc };
