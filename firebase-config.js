@@ -5,12 +5,13 @@ import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/fireb
 
 // TODO: Replace this object with your actual Firebase project configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAJ0LDRzZ9D2dLsbYNaag_NKgjr9JqpbOY",
+  authDomain: "life-66-40152.firebaseapp.com",
+  projectId: "life-66-40152",
+  storageBucket: "life-66-40152.firebasestorage.app",
+  messagingSenderId: "926692803067",
+  appId: "1:926692803067:web:c8f9dac793a1e0cc684b5e",
+  measurementId: "G-DZHYVP8N0R"
 };
 
 // Initialize Firebase
