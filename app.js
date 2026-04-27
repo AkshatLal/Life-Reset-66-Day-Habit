@@ -1,4 +1,4 @@
-import { auth, db, provider, signInWithPopup, onAuthStateChanged, signOut, doc, setDoc, getDoc } from './firebase-config.js';
+import { auth, db, provider, signInWithRedirect, onAuthStateChanged, signOut, doc, setDoc, getDoc } from './firebase-config.js';
 
 const ui = {
     currentUser: null,
@@ -123,7 +123,7 @@ document.getElementById('btn-start-timer').addEventListener('click', () => ui.st
 // --- EVENT LISTENERS & AUTH STATE ---
 
 document.getElementById('btn-login').addEventListener('click', () => {
-    signInWithPopup(auth, provider).catch(error => console.error("Login failed", error));
+    signInWithRedirect(auth, provider).catch(error => console.error("Login failed", error));
 });
 
 document.getElementById('btn-generate').addEventListener('click', () => {
