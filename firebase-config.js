@@ -21,4 +21,4 @@ const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
 // Export everything so app.js can use it
-export { auth, db, provider, signInWithPopup, onAuthStateChanged, signOut, doc, setDoc, getDoc };
+export { auth, db, provider, signInWithRedirect, onAuthStateChanged, signOut, doc, setDoc, getDoc };
