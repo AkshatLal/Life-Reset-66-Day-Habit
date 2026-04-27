@@ -42,23 +42,58 @@
         <div style="margin-bottom: auto;"></div>
     </div>
 
-    <!-- Screen 4: The Dashboard -->
-    <div id="screen-dashboard" class="screen">
-        <div class="dashboard-header">
-            <div>
-                <h3 style="margin: 0; text-align: left;">Day <span id="day-counter">1</span> of 66</h3>
-                <span id="user-greeting" style="color: var(--text-muted); font-size: 12px;">Initiation Phase</span>
-            </div>
-            <div class="level-badge">Lvl 1 Novice</div>
-        </div>
-
-        <p style="text-align: left; color: white;"><strong>Your Daily Quests</strong></p>
+    <!-- Screen 4: The Full Dashboard SPA -->
+    <div id="screen-dashboard" class="screen dashboard-layout">
         
-        <div class="quest-list" id="quest-list">
-            <!-- Populated via JavaScript -->
-        </div>
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <h2 style="color: var(--primary);">Life Reset</h2>
+            <div class="user-stats">
+                <div class="level-badge" id="ui-level">Lvl 1 Novice</div>
+                <div class="xp-bar-container">
+                    <div class="xp-bar" id="ui-xp-bar"></div>
+                </div>
+                <small><span id="ui-xp-text">0</span> / 100 XP</small>
+            </div>
+            <ul class="nav-links">
+                <li onclick="app.switchView('view-quests')" class="active">Daily Quests</li>
+                <li onclick="app.switchView('view-timer')">Focus Timer</li>
+                <li onclick="app.switchView('view-journal')">Journal</li>
+            </ul>
+            <button id="btn-logout" class="btn btn-logout-small">Log Out</button>
+        </nav>
 
-        <button id="btn-logout" class="btn" style="margin-top: 20px; background: #ef4444;">Log Out</button>
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- View: Daily Quests -->
+            <div id="view-quests" class="view active">
+                <div class="dashboard-header">
+                    <div>
+                        <h3 style="margin: 0; text-align: left;">Day <span id="day-counter">1</span></h3>
+                        <span id="user-greeting" style="color: var(--text-muted); font-size: 14px;">Let's get to work.</span>
+                    </div>
+                    <div class="streak-badge">🔥 <span id="ui-streak">0</span> Day Streak</div>
+                </div>
+                <div class="quest-list" id="quest-list"></div>
+            </div>
+
+            <!-- View: Focus Timer -->
+            <div id="view-timer" class="view">
+                <h3>Deep Work Timer</h3>
+                <p>Earn 50 XP for every 25 minutes of unbroken focus.</p>
+                <div class="timer-display" id="timer-display">25:00</div>
+                <button class="btn" id="btn-start-timer">Start Focus</button>
+            </div>
+
+            <!-- View: Journal -->
+            <div id="view-journal" class="view">
+                <h3>Daily Reflection</h3>
+                <textarea id="journal-input" placeholder="What are you grateful for today?"></textarea>
+                <button class="btn" id="btn-save-journal">Save & Earn XP</button>
+            </div>
+
+        </main>
     </div>
 
 </div>
