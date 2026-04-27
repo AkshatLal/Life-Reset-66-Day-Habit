@@ -4,7 +4,16 @@ const ui = {
     currentUser: null,
     userData: { xp: 0, level: 1, streak: 0, plan: [] },
     
-    // ... (Keep your parameters array here) ...
+    // RESTORED: The parameters array and selection state
+    parameters: [
+        { id: 'mental', label: 'Mental Health', task: 'Complete 10 min Guided Meditation' },
+        { id: 'screen', label: 'Screen Time', task: 'Activate Screen Blocker for 2 hours' },
+        { id: 'time', label: 'Procrastination', task: 'Complete one 25-min Focus Timer' },
+        { id: 'physical', label: 'Physical Health', task: 'Log workout or 10,000 steps' },
+        { id: 'sleep', label: 'Sleep Quality', task: 'Wind-down routine by 10:00 PM' },
+        { id: 'water', label: 'Hydration', task: 'Drink 2 Liters of Water' }
+    ],
+    selectedParams: new Set(),
 
     switchScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -14,14 +23,48 @@ const ui = {
     switchView(viewId) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById(viewId).classList.add('active');
-        // Update active class on sidebar
         document.querySelectorAll('.nav-links li').forEach(li => li.classList.remove('active'));
         event.target.classList.add('active');
     },
 
+    // RESTORED: Generating the Quiz Grid
+    renderGrid() {
+        const grid = document.getElementById('param-grid');
+        grid.innerHTML = '';
+        this.parameters.forEach(param => {
+            const div = document.createElement('div');
+            div.className = 'param-card';
+            div.textContent = param.label;
+            div.onclick = () => {
+                div.classList.toggle('selected');
+                this.selectedParams.has(param.id) ? this.selectedParams.delete(param.id) : this.selectedParams.add(param.id);
+            };
+            grid.appendChild(div);
+        });
+    },
+
+    // RESTORED: Saving the new plan to the database
+    async savePlanAndLoadDashboard() {
+        if (this.selectedParams.size === 0) return alert("Select at least one area!");
+        
+        this.switchScreen('screen-loading');
+        const userPlan = Array.from(this.selectedParams);
+        
+        await setDoc(doc(db, "users", this.currentUser.uid), {
+            plan: userPlan,
+            day: 1,
+            email: this.currentUser.email,
+            xp: 0,
+            level: 1,
+            streak: 0
+        }, { merge: true });
+
+        setTimeout(() => this.loadDashboard({ plan: userPlan, xp: 0, level: 1, streak: 0 }), 1500);
+    },
+
     async loadDashboard(userData) {
-        this.userData = { ...this.userData, ...userData }; // Merge database data
-        document.getElementById('user-greeting').textContent = `Welcome back, ${this.currentUser.displayName}`;
+        this.userData = { ...this.userData, ...userData }; 
+        document.getElementById('user-greeting').textContent = `Welcome back, ${this.currentUser.displayName || 'Player'}`;
         
         this.updateRPGStats();
         
@@ -41,7 +84,6 @@ const ui = {
     async gainXP(amount) {
         this.userData.xp += amount;
         
-        // Level up calculation (Every 100 XP = 1 Level)
         const xpRequired = this.userData.level * 100;
         if (this.userData.xp >= xpRequired) {
             this.userData.level++;
@@ -51,7 +93,6 @@ const ui = {
 
         this.updateRPGStats();
 
-        // Save new stats to Firebase
         await setDoc(doc(db, "users", this.currentUser.uid), {
             xp: this.userData.xp,
             level: this.userData.level
@@ -83,7 +124,7 @@ const ui = {
             btn.classList.add('completed');
             btn.textContent = 'Completed';
             btn.disabled = true;
-            this.gainXP(xpReward); // Trigger the RPG Engine!
+            this.gainXP(xpReward); 
         };
 
         div.appendChild(span); div.appendChild(btn); listElement.appendChild(div);
@@ -92,7 +133,7 @@ const ui = {
     // --- MINI TOOL: FOCUS TIMER ---
     timerInterval: null,
     startTimer() {
-        let timeLeft = 25 * 60; // 25 minutes
+        let timeLeft = 25 * 60; 
         const display = document.getElementById('timer-display');
         const btn = document.getElementById('btn-start-timer');
         
@@ -110,17 +151,14 @@ const ui = {
                 display.textContent = "25:00";
                 btn.disabled = false;
                 btn.textContent = "Start Focus";
-                this.gainXP(50); // Reward for deep work
+                this.gainXP(50); 
                 alert("Session Complete! +50 XP");
             }
         }, 1000);
     }
 };
 
-// Add listener for the timer
 document.getElementById('btn-start-timer').addEventListener('click', () => ui.startTimer());
-
-// --- EVENT LISTENERS & AUTH STATE ---
 
 document.getElementById('btn-login').addEventListener('click', () => {
     signInWithRedirect(auth, provider).catch(error => console.error("Login failed", error));
@@ -134,34 +172,31 @@ document.getElementById('btn-logout').addEventListener('click', () => {
     signOut(auth);
 });
 
-// Firebase Auth Observer - The magic that checks if someone is logged in
+// Firebase Auth Observer
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         console.log("✅ User authenticated successfully:", user.email);
         ui.currentUser = user;
         
         try {
-            console.log("🔍 Checking database for existing plan...");
-            // Check database to see if they already created a plan
             const docSnap = await getDoc(doc(db, "users", user.uid));
             
             if (docSnap.exists() && docSnap.data().plan) {
                 console.log("📂 Existing plan found. Loading dashboard.");
-                ui.loadDashboard(docSnap.data().plan); // Skip quiz, go to dashboard
+                ui.loadDashboard(docSnap.data()); 
             } else {
                 console.log("🆕 New user or no plan found. Loading quiz.");
                 ui.renderGrid();
-                ui.switchScreen('screen-quiz'); // New user, show quiz
+                ui.switchScreen('screen-quiz'); 
             }
         } catch (error) {
-            // If the database fails (e.g., security rules), log the error but STILL let the user in!
             console.error("❌ Database Error:", error.message);
+            // Even if DB fails, render the grid so it doesn't freeze
             ui.renderGrid();
             ui.switchScreen('screen-quiz'); 
         }
-        
     } else {
-        console.log("🔒 No user logged in. Showing login screen.");
-        ui.switchScreen('screen-login'); // Logged out
+        console.log("🔒 No user logged in.");
+        ui.switchScreen('screen-login'); 
     }
 });
