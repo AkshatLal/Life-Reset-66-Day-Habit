@@ -1,4 +1,4 @@
-import { auth, db, provider, signInWithRedirect, onAuthStateChanged, signOut, doc, setDoc, getDoc, getRedirectResult } from './firebase-config.js';
+import { auth, db, provider, signInWithPopup, onAuthStateChanged, signOut, doc, setDoc, getDoc } from './firebase-config.js';
 
 const ui = {
     currentUser: null,
@@ -170,16 +170,6 @@ document.getElementById('btn-generate').addEventListener('click', () => {
 
 document.getElementById('btn-logout').addEventListener('click', () => {
     signOut(auth);
-});
-
-// --- NEW CATCHER: Forces Firebase to process the redirect ---
-getRedirectResult(auth).then((result) => {
-    if (result) {
-        console.log("🎯 Redirect caught successfully! User:", result.user.email);
-    }
-}).catch((error) => {
-    console.error("❌ Redirect completely failed:", error.message);
-    alert("Login failed due to browser cookies. See console.");
 });
 
 // Firebase Auth Observer
